@@ -1,0 +1,47 @@
+{
+  "name": "@emelon/openapi-nano",
+  "version": "0.1.0",
+  "description": "A zero-dependency, ultra-lightweight OpenAPI specification builder for TypeScript.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "format": "prettier --write .",
+    "local-push": "npm run build && yalc push",
+    "dev:example": "nodemon --watch lib -e ts --exec \"npm run local-push\""
+  },
+  "keywords": [
+    "openapi",
+    "swagger",
+    "documentation",
+    "typescript",
+    "zero-dependency",
+    "nano"
+  ],
+  "author": "Emmanuel Gatwech",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.3",
+    "nodemon": "^3.1.14",
+    "prettier": "^3.8.4",
+    "typescript": "^5.0.0",
+    "vitest": "^4.1.8"
+  }
+}

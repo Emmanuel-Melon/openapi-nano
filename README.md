@@ -101,14 +101,14 @@ export const createShinobiDoc = route({
 export const shinobiDocSuite = [getShinobiDoc, createShinobiDoc];
 ```
 
-### 3. Compile the System Specification Tree (`openapi.ts`)
+### 3. Compile the Standard OpenAPI Tree (`openapi.ts`)
 
 ```typescript
 import { generateOpenApiSpec } from "@emelon/openapi-nano";
 import { shinobiDocSuite } from "./shinobi.docs.js";
 import { shinobiResource } from "./shinobi.types.js";
 
-export const openApiSpecification = generateOpenApiSpec({
+export const standardSpecification = generateOpenApiSpec({
   title: "Hidden Leaf Village API Docs",
   version: "1.0.0",
   description: "Enterprise domain-driven data presentation schemas.",
@@ -122,6 +122,44 @@ export const openApiSpecification = generateOpenApiSpec({
   routes: [...shinobiDocSuite],
 });
 ```
+
+---
+
+## Advanced Ecosystem Modules
+
+### JSON:API Specification Extensions (`@emelon/openapi-nano/jsonapi`)
+
+If you are leveraging a strict JSON:API architecture (e.g., using `@emelon/jsonapi-nano`), you can import our subpath compiler module. This module instantly projects your domain resource configurations into valid top-level compound documents containing `data`, `attributes`, `relationships`, and `links` arrays without structural code duplication:
+
+```typescript
+import { generateOpenApiSpec } from "@emelon/openapi-nano";
+import { compileJsonApiSchemas } from "@emelon/openapi-nano/jsonapi";
+import { shinobiDocSuite } from "./shinobi.docs.js";
+import { shinobiResource } from "./shinobi.types.js";
+
+// Compiles fully wrapped resource, singleResponse, and collectionResponse documentation schemas
+const shinobiJsonApiSuite = compileJsonApiSchemas({
+  type: "shinobi",
+  pascalName: "Shinobi",
+  schema: shinobiResource.select,
+});
+
+export const jsonApiSpecification = generateOpenApiSpec({
+  title: "Hidden Leaf Village API Docs (JSON:API Compliant)",
+  version: "1.0.0",
+  components: {
+    schemas: {
+      ShinobiInsert: shinobiResource.insert,
+      ShinobiObject: shinobiJsonApiSuite.resourceSchema,
+      ShinobiSingleResponse: shinobiJsonApiSuite.singleResponseSchema,
+      ShinobiCollectionResponse: shinobiJsonApiSuite.collectionResponseSchema,
+    },
+  },
+  routes: shinobiDocSuite,
+});
+```
+
+---
 
 ## Why openapi-nano?
 

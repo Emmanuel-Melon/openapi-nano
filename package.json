@@ -10,6 +10,11 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.js"
+    },
+    "./jsonapi": {
+      "types": "./dist/jsonapi.d.ts",
+      "import": "./dist/jsonapi.js",
+      "require": "./dist/jsonapi.js"
     }
   },
   "files": [

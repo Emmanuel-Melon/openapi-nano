@@ -1,9 +1,9 @@
-import { OpenAPIBuilderOptions } from "./types.js";
+import type { OpenAPIBuilderOptions } from "./types.js";
 
 export function generateOpenApiSpec(
   options: OpenAPIBuilderOptions,
 ): Record<string, unknown> {
-  const paths: Record<string, any> = {};
+  const paths: Record<string, Record<string, unknown>> = {};
 
   for (const route of options.routes) {
     if (!paths[route.path]) {
@@ -21,6 +21,16 @@ export function generateOpenApiSpec(
     };
   }
 
+  const cleanComponents = options.components?.schemas
+    ? {
+        schemas: Object.fromEntries(
+          Object.entries(options.components.schemas).filter(
+            ([_, schema]) => schema !== undefined,
+          ),
+        ),
+      }
+    : undefined;
+
   return {
     openapi: "3.1.0",
     info: {
@@ -28,6 +38,7 @@ export function generateOpenApiSpec(
       version: options.version,
       ...(options.description && { description: options.description }),
     },
+    ...(cleanComponents && { components: cleanComponents }),
     paths,
   };
 }

@@ -1,12 +1,20 @@
-import type { OpenApiSchema, ResponseMap, RouteDefinition } from "./types.js";
+import type {
+  OpenApiSchemaNode,
+  ResponseMap,
+  RouteDefinition,
+} from "./types.js";
 
 export function route(def: RouteDefinition): RouteDefinition {
   return def;
 }
 
+/**
+ * Generates a partial ResponseMap for successful outcomes.
+ * Accepts both raw literal objects and structural OpenApiReference pointers safely.
+ */
 export function response(
   statusCode: number,
-  schema: OpenApiSchema,
+  schema: OpenApiSchemaNode,
   description = "Success",
 ): ResponseMap {
   return {
@@ -23,7 +31,6 @@ export function response(
 
 export function errors(...statusCodes: number[]): ResponseMap {
   const map: ResponseMap = {};
-
   const defaultDescriptions: Record<number, string> = {
     400: "Bad Request",
     401: "Unauthorized",
@@ -37,6 +44,5 @@ export function errors(...statusCodes: number[]): ResponseMap {
       description: defaultDescriptions[code] || "Error Response",
     };
   }
-
   return map;
 }

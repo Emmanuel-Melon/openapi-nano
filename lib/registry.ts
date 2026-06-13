@@ -15,6 +15,7 @@ export function generateOpenApiSpec(
       ...(route.description && { description: route.description }),
       ...(route.tag && { tags: [route.tag] }),
       ...(route.security && { security: route.security }),
+      ...(route.parameters && { parameters: route.parameters }),
       ...(route.requestBody && { requestBody: route.requestBody }),
       responses: route.responses,
     };

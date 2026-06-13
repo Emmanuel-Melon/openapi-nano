@@ -18,6 +18,17 @@ export interface ResourceDefinition<
   update?: Update;
 }
 
+export interface OpenApiParameter {
+  name: string;
+  in: "path" | "query" | "header" | "cookie";
+  required: boolean;
+  description?: string;
+  schema: {
+    type: "string" | "number" | "integer" | "boolean" | "array";
+    [key: string]: unknown;
+  };
+}
+
 // HTTP Payload Objects (Responses & Transports)
 
 export interface ApiResponse {
@@ -42,6 +53,7 @@ export interface RouteDefinition {
   description?: string;
   tag?: string;
   security?: Record<string, string[]>[];
+  parameters?: OpenApiParameter[];
   requestBody?: {
     description?: string;
     content: {

@@ -11,23 +11,19 @@ A lightweight, ultra-fast, zero-dependency presentation layer engine for buildin
 
 ```bash
 npm install @emelon/openapi-nano
+
 ```
 
 ## Complete API Lifecycle Integration
 
-Below is an end-to-end example demonstrating how to map data resource shapes, declare clean routes using shorthand response/error helpers, and generate a final document manifest.
+Below is an end-to-end example demonstrating how to organize domain types, declare clean paths with structural `$ref` component pointers using shorthand helpers, and compile a final deduplicated document manifest tree.
+
+### 1. Define Domain Blueprints (`shinobi.types.ts`)
 
 ```typescript
-import {
-  resource,
-  route,
-  response,
-  errors,
-  generateOpenApiSpec,
-} from "@emelon/openapi-nano";
+import { resource } from "@emelon/openapi-nano";
 
-// 1. Define plain OpenAPI object schemas for your domain model
-const ShinobiSchema = {
+const ShinobiSelectSchema = {
   type: "object" as const,
   properties: {
     id: { type: "string" },
@@ -37,7 +33,7 @@ const ShinobiSchema = {
   required: ["id", "name"],
 };
 
-const CreateShinobiSchema = {
+const ShinobiInsertSchema = {
   type: "object" as const,
   properties: {
     name: { type: "string" },
@@ -46,61 +42,93 @@ const CreateShinobiSchema = {
   required: ["name"],
 };
 
-// 2. Group schemas together logically as a core domain resource
 export const shinobiResource = resource({
-  select: ShinobiSchema,
-  insert: CreateShinobiSchema,
+  select: ShinobiSelectSchema,
+  insert: ShinobiInsertSchema,
 });
+```
 
-// 3. Declare individual endpoint path operations contextually
-export const getShinobiRoute = route({
+### 2. Declare Path Presentation Layers (`shinobi.docs.ts`)
+
+```typescript
+import { route, response, errors } from "@emelon/openapi-nano";
+import type { OpenApiReference } from "@emelon/openapi-nano";
+
+// Use standard type-safe pointers to reference shared components
+const SHINOBI_REF: OpenApiReference = { $ref: "#/components/schemas/Shinobi" };
+const SHINOBI_INSERT_REF: OpenApiReference = {
+  $ref: "#/components/schemas/ShinobiInsert",
+};
+
+export const getShinobiDoc = route({
   method: "get",
   path: "/shinobi/{id}",
   summary: "Get shinobi character details",
-  tag: "Shinobi",
+  tag: "Shinobi v1",
+  parameters: [
+    {
+      name: "id",
+      in: "path",
+      required: true,
+      description: "The unique registration ID of the character",
+      schema: { type: "string" },
+    },
+  ],
   responses: {
-    ...response(200, shinobiResource.select, "Character profile found"),
+    ...response(200, SHINOBI_REF, "Character profile found safely"),
     ...errors(401, 404),
   },
 });
 
-export const createShinobiRoute = route({
+export const createShinobiDoc = route({
   method: "post",
   path: "/shinobi",
-  summary: "Register a new shinobi character entry",
-  tag: "Shinobi",
+  summary: "Register a new shinobi character",
+  tag: "Shinobi v1",
   requestBody: {
     content: {
       "application/json": {
-        schema: shinobiResource.insert,
+        schema: SHINOBI_INSERT_REF,
       },
     },
   },
   responses: {
-    ...response(201, shinobiResource.select, "Character registration complete"),
+    ...response(201, SHINOBI_REF, "Character registration complete"),
     ...errors(400, 401),
   },
 });
 
-// 4. Compile everything together into a valid OpenAPI documentation graph
-const apiSpecification = generateOpenApiSpec({
-  title: "Hidden Leaf Village Shinobi Directory",
-  version: "1.0.0",
-  description:
-    "Core presentation documentation system for Hidden Leaf Ninja data assets.",
-  routes: [getShinobiRoute, createShinobiRoute],
-});
+export const shinobiDocSuite = [getShinobiDoc, createShinobiDoc];
+```
 
-// Expose the resulting `apiSpecification` object directly in Express, Fastify, Nest.js,
-// or write it out straight to an explicit JSON file on your machine!
-console.log(JSON.stringify(apiSpecification, null, 2));
+### 3. Compile the System Specification Tree (`openapi.ts`)
+
+```typescript
+import { generateOpenApiSpec } from "@emelon/openapi-nano";
+import { shinobiDocSuite } from "./shinobi.docs.js";
+import { shinobiResource } from "./shinobi.types.js";
+
+export const openApiSpecification = generateOpenApiSpec({
+  title: "Hidden Leaf Village API Docs",
+  version: "1.0.0",
+  description: "Enterprise domain-driven data presentation schemas.",
+  components: {
+    schemas: {
+      // Registering here assigns pointers used by your paths automatically
+      Shinobi: shinobiResource.select,
+      ShinobiInsert: shinobiResource.insert,
+    },
+  },
+  routes: [...shinobiDocSuite],
+});
 ```
 
 ## Why openapi-nano?
 
-- 🪶 Zero dependencies – Keeps your deployment footprints clean and small.
-- ⚡ No Magic or Overhead – You write plain objects, and it outputs a plain OpenAPI schema tree.
-- 🧩 100% Extensible – Because schemas are plain objects, you can append any custom extensions (x-hooks, x-expand) natively without waiting for helper updates.
+- 🪶 **Zero dependencies** – Keeps your deployment footprints clean and small.
+- ⚡ **No Magic or Overhead** – You write plain objects, and it outputs a plain OpenAPI schema tree.
+- 🧩 **100% Extensible** – Because schemas are plain objects, you can append any custom extensions (`x-hooks`, `x-expand`) natively without waiting for helper updates.
+- 🗜️ **Deduplicated Payload Structure** – Native support for shared `components.schemas` definitions using type-safe structural `$ref` references.
 
 ## License
 

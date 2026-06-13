@@ -1,12 +1,17 @@
 // Core Data Blocks (Schemas & Resources)
+export interface OpenApiReference {
+  $ref: string;
+}
 
 export interface OpenApiSchema {
   type: "object";
   properties: Record<string, unknown>;
   required?: string[];
   description?: string;
-  [key: string]: unknown; // Allows for custom OpenAPI extensions (e.g., x-expand)
+  [key: string]: unknown;
 }
+
+export type OpenApiSchemaNode = OpenApiSchema | OpenApiReference;
 
 export interface ResourceDefinition<
   Select extends OpenApiSchema,
@@ -30,12 +35,11 @@ export interface OpenApiParameter {
 }
 
 // HTTP Payload Objects (Responses & Transports)
-
 export interface ApiResponse {
   description?: string;
   content?: {
     "application/json"?: {
-      schema: OpenApiSchema;
+      schema: OpenApiSchemaNode;
     };
     [mediaType: string]: unknown; // Allows for future expansion (e.g., application/vnd.api+json)
   };
@@ -58,7 +62,7 @@ export interface RouteDefinition {
     description?: string;
     content: {
       "application/json": {
-        schema: OpenApiSchema;
+        schema: OpenApiSchemaNode;
       };
     };
     required?: boolean;
@@ -70,5 +74,8 @@ export interface OpenAPIBuilderOptions {
   title: string;
   version: string;
   description?: string;
+  components?: {
+    schemas?: Record<string, OpenApiSchema | undefined>;
+  };
   routes: RouteDefinition[];
 }
